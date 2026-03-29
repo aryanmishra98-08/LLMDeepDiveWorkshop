@@ -26,9 +26,6 @@ This repository contains all the code examples demonstrated during the workshop.
 
 Feel free to raise issues or submit pull requests for improvements or additional examples.
 
-
----
-
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
