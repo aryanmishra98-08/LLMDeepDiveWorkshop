@@ -80,9 +80,9 @@ CodebaseExamples/
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd CodebaseExamples
-git checkout llm-wrapper
+git clone https://github.com/aryanmishra98-08/LLMDeepDiveWorkshop.git
+cd LLMDeepDiveWorkshop
+git checkout Session-1
 ```
 
 ### 2. Create a virtual environment (recommended)
