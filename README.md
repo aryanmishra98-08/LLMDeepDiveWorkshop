@@ -64,9 +64,9 @@ CodebaseExamples/
 ### 1. Clone the Repository
 
 ```bash
-git clone <repo-url>
-cd CodebaseExamples
-git checkout prompt-examples
+git clone https://github.com/aryanmishra98-08/LLMDeepDiveWorkshop.git
+cd LLMDeepDiveWorkshop
+git checkout Session-2
 ```
 
 ### 2. Create a Virtual Environment
