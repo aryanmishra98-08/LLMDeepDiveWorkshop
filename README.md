@@ -6,7 +6,10 @@ A command-line chatbot application that connects to **Azure OpenAI**, **OpenAI**
 
 ---
 
-> **Testing Note:** This codebase has only been tested with **Ollama** and **Azure OpenAI**. Support for OpenAI, Anthropic, and Google Gemini is implemented but has not been tested.
+> [!WARNING]
+> **Testing Status:** This codebase has been fully tested with **Ollama** and **Azure OpenAI** only. Support for **OpenAI**, **Anthropic**, and **Google Gemini** is implemented and should work, but has **not been independently verified**. If you encounter issues with those providers, check that credentials are correctly set and the provider adapter is behaving as expected.
+
+---
 
 ## Features
 
