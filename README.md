@@ -1,4 +1,4 @@
-# LLMDeepDiveWorkshop
+# LLM Deep Dive Workshop
 
 ## Overview
 This repository contains all the code examples demonstrated during the workshop. It is intended to serve as a reference for participants to revisit concepts, explore implementations, and experiment further.
