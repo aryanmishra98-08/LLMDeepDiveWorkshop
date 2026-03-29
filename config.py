@@ -32,7 +32,32 @@ AZURE_OPENAI_MODEL_NAME  = os.getenv("AZURE_OPENAI_MODEL_NAME", "")
 # to the OpenAI API (non-Azure).
 
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "gpt-4o")
+OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "")
+
+
+# ── Anthropic Settings ────────────────────────────────────────────────────
+# These values come from your .env file. They tell the app how to connect
+# to the Anthropic API.
+
+ANTHROPIC_API_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL_NAME = os.getenv("ANTHROPIC_MODEL_NAME", "")
+
+
+# ── Gemini Settings ───────────────────────────────────────────────────────
+# Gemini exposes an OpenAI-compatible endpoint, so no extra SDK is needed.
+# Set GEMINI_BASE_URL in keys/.env to point the OpenAI client at Google's API.
+
+GEMINI_API_KEY    = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "")
+GEMINI_BASE_URL   = os.getenv("GEMINI_BASE_URL", "")
+
+
+# ── Ollama Settings ───────────────────────────────────────────────────────
+# Ollama runs locally and exposes an OpenAI-compatible endpoint.
+# Set OLLAMA_BASE_URL in keys/.env to point the OpenAI client at your Ollama instance.
+
+OLLAMA_MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "")
+OLLAMA_BASE_URL   = os.getenv("OLLAMA_BASE_URL", "")
 
 
 # Model behaviour defaults (can be tweaked here)

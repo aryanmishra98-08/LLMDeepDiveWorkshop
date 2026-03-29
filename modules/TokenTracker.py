@@ -64,34 +64,26 @@ class TokenTracker:
 
     # ── Recording ──────────────────────────────────────────────────────────
 
-    def record(self, session_id, response):
+    def record(self, session_id, prompt_tokens, completion_tokens, total_tokens):
         """
-        Pull token counts out of an OpenAI API response and add them
-        to both the session total and the user total.
+        Add token counts from one API call to both the session and user totals.
+
+        Token counts are passed directly as integers so this tracker stays
+        decoupled from any SDK's response shape -- each AI manager extracts
+        the counts itself and passes them here.
         """
-        # The response object has a .usage attribute with token counts
-        usage = getattr(response, "usage", None)
-
-        if usage is None:
-            logger.warning("Response has no usage data -- skipping tracking.")
-            return
-
-        prompt = usage.prompt_tokens or 0
-        completion = usage.completion_tokens or 0
-        total = usage.total_tokens or 0
-
         # Update session-level totals
         if session_id in self.session_usage:
-            self.session_usage[session_id].add(prompt, completion, total)
+            self.session_usage[session_id].add(prompt_tokens, completion_tokens, total_tokens)
 
         # Update user-level totals
         username = self.session_to_user.get(session_id)
         if username and username in self.user_usage:
-            self.user_usage[username].add(prompt, completion, total)
+            self.user_usage[username].add(prompt_tokens, completion_tokens, total_tokens)
 
         logger.debug(
             "Tokens recorded -- session=%s user=%s prompt=%d completion=%d total=%d",
-            session_id, username, prompt, completion, total,
+            session_id, username, prompt_tokens, completion_tokens, total_tokens,
         )
 
     # ── Queries ────────────────────────────────────────────────────────────

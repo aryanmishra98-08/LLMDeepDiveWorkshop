@@ -11,7 +11,14 @@ talks to the AI manager, conversation manager, and token tracker.
 """
 
 from config import logger, MAX_MESSAGES, WINDOW_SIZE, SUMMARIZE_COUNT
-from modules.AIManagers import AzureOpenAIManager, ChatResult, OpenAIManager
+from modules.AIManagers import (
+    AnthropicManager,
+    AzureOpenAIManager,
+    ChatResult,
+    GeminiManager,
+    OllamaManager,
+    OpenAIManager,
+)
 from modules.ConversationManagers import (
     SimpleConversationManager,
     FixedWindowConversationManager,
@@ -26,6 +33,9 @@ from modules.TokenTracker import TokenTracker, TokenUsage
 AVAILABLE_AI_MANAGERS = {
     "Azure OpenAI": "azure",
     "OpenAI": "openai",
+    "Anthropic": "anthropic",
+    "Google Gemini": "gemini",
+    "Ollama (Local)": "ollama",
 }
 
 AVAILABLE_MEMORY_MANAGERS = {
@@ -61,6 +71,12 @@ class ChatOrchestrator:
             self.ai_manager = AzureOpenAIManager()
         elif ai_choice == "openai":
             self.ai_manager = OpenAIManager()
+        elif ai_choice == "anthropic":
+            self.ai_manager = AnthropicManager()
+        elif ai_choice == "gemini":
+            self.ai_manager = GeminiManager()
+        elif ai_choice == "ollama":
+            self.ai_manager = OllamaManager()
         else:
             # Default to Azure if something unexpected is passed
             self.ai_manager = AzureOpenAIManager()
@@ -97,6 +113,23 @@ class ChatOrchestrator:
             self.provider,
             self.manager_label,
         )
+
+    # ── Provider Health Check ──────────────────────────────────────────────
+
+    def check_provider(self):
+        """
+        Send a minimal test message to the configured provider to verify
+        that credentials, model name, and connectivity are all working.
+
+        Returns (ok: bool, error_message: str | None).
+        """
+        probe = [
+            {"role": "user", "content": "Hi"},
+        ]
+        result = self.ai_manager.chat_completion(probe)
+        if result.status:
+            return True, None
+        return False, result.error
 
     # ── Session Management ─────────────────────────────────────────────────
 
@@ -155,7 +188,12 @@ class ChatOrchestrator:
         # Step 4 & 5: If successful, save the reply and track tokens
         if response.status:
             self.conv_manager.add_assistant_message(session_id, response.reply)
-            self.token_tracker.record(session_id, response.raw)
+            self.token_tracker.record(
+                session_id,
+                response.prompt_tokens,
+                response.completion_tokens,
+                response.total_tokens,
+            )
 
             return ChatResult(status=True, reply=response.reply)
 

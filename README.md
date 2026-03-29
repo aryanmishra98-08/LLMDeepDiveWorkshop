@@ -1,6 +1,6 @@
 # LLMDeepDiveWorkshop
 
-# LLM Wrapper: Command-Line Chatbot with Azure OpenAI / OpenAI
+# LLM Wrapper: Command-Line Chatbot with Azure OpenAI, OpenAI, Anthropic, Gemini & Ollama
 
 A command-line chatbot application that connects to **Azure OpenAI** or **OpenAI** APIs with multi-user session management, pluggable conversation memory strategies, and built-in token usage tracking. It is designed as a teaching example to demonstrate how to structure an AI chat app in Python.
 
@@ -8,7 +8,7 @@ A command-line chatbot application that connects to **Azure OpenAI** or **OpenAI
 
 ## Features
 
-- **Multiple AI providers** — choose between Azure OpenAI and OpenAI at login.
+- **Multiple AI providers** — choose between Azure OpenAI, OpenAI, Anthropic (Claude), Google Gemini, and Ollama at login.
 - **Three conversation memory strategies:**
   | Strategy | Behaviour |
   |---|---|
@@ -46,10 +46,12 @@ CodebaseExamples/
 ## How It Works
 
 ```
-┌──────────┐      ┌──────────────────┐      ┌──────────────┐
-│  app.py  │─────▶│ ChatOrchestrator │─────▶│  AIManager   │──▶ OpenAI API
-│  (CLI)   │      │   (controller)   │      │ (Azure/std)  │
-└──────────┘      └──────────────────┘      └──────────────┘
+┌──────────┐      ┌──────────────────┐      ┌──────────────────────┐
+│  app.py  │─────▶│ ChatOrchestrator │─────▶│      AIManager       │──▶ LLM API
+│  (CLI)   │      │   (controller)   │      │ (Azure/OpenAI/       │
+└──────────┘      └──────────────────┘      │  Anthropic/Gemini/   │
+                                            │  Ollama)             │
+                                            └──────────────────────┘
                          │       │
                          ▼       ▼
               ┌────────────┐  ┌──────────────┐
@@ -60,7 +62,7 @@ CodebaseExamples/
 
 1. **`app.py`** presents the user interface (login → user menu → chat → admin menu).
 2. **`ChatOrchestrator`** is the central controller. It receives a user message, passes it through the conversation manager, calls the AI, stores the reply, and records token usage.
-3. **`AIManagers`** wrap the OpenAI SDK to send chat completion requests and return a `ChatResult`.
+3. **`AIManagers`** wrap the provider SDKs to send chat completion requests and return a `ChatResult`. All providers expose a uniform interface so the rest of the app is provider-agnostic.
 4. **`ConversationManagers`** decide which messages to include in each API call based on the chosen strategy.
 5. **`TokenTracker`** keeps running totals of prompt/completion/total tokens per session and per user.
 
@@ -71,7 +73,7 @@ CodebaseExamples/
 ### Prerequisites
 
 - **Python 3.10+**
-- An **Azure OpenAI** or **OpenAI** API key
+- An API key for at least one supported provider: Azure OpenAI, OpenAI, Anthropic, or Google Gemini — or a locally running [Ollama](https://ollama.com) instance
 
 ### 1. Clone the repository
 
@@ -109,9 +111,22 @@ AZURE_OPENAI_API_VERSION=2024-12-01-preview
 # Standard OpenAI
 OPENAI_API_KEY=sk-your-openai-key-here
 OPENAI_MODEL_NAME=gpt-4o
+
+# Anthropic (Claude)
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+ANTHROPIC_MODEL_NAME=claude-3-5-sonnet-20241022
+
+# Google Gemini (uses OpenAI-compatible endpoint — no extra SDK needed)
+GEMINI_API_KEY=your-gemini-key-here
+GEMINI_MODEL_NAME=gemini-2.0-flash
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+
+# Ollama (local — no API key required)
+OLLAMA_MODEL_NAME=llama3.2
+OLLAMA_BASE_URL=http://localhost:11434/v1
 ```
 
-> **Note:** Only fill in the section for the provider you plan to use.
+> **Note:** Only fill in the section(s) for the provider(s) you plan to use. Ollama requires a locally running Ollama instance but no API key.
 
 ---
 
@@ -124,7 +139,7 @@ python app.py
 You will be guided through the following steps:
 
 1. **Enter a username** — any string; used to group your sessions.
-2. **Choose an AI provider** — Azure OpenAI or OpenAI.
+2. **Choose an AI provider** — Azure OpenAI, OpenAI, Anthropic, Google Gemini, or Ollama (local).
 3. **Choose a memory strategy** — Simple, Fixed Window, or Summarizing.
 4. **User menu** — create sessions, resume, view token usage, or open the admin menu.
 5. Inside a session, type a message and press Enter to chat with the AI.

@@ -169,6 +169,15 @@ def login_flow(shared_tracker):
         shared_tracker=shared_tracker,
     )
 
+    # Verify the provider is reachable before letting the user proceed
+    print("  Checking provider connection...")
+    ok, error = orch.check_provider()
+    if not ok:
+        print(f"\n  Provider check failed: {error or 'No response received.'}")
+        print("  Please verify your API key, model name, and endpoint in keys/.env\n")
+        return None, None
+    print("  Provider OK.\n")
+
     logger.info(
         "User '%s' logged in -- AI: %s, memory: %s",
         username, ai_choice, memory_choice,
