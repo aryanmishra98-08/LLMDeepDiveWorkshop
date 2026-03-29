@@ -6,13 +6,17 @@ Demonstrates context-lean handoffs between steps.
 
 import asyncio
 import json
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import re
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def research_chain(topic: str, model: str = None) -> dict:
     """3-step chain: generate subtopics → research each → synthesize."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     results = {"steps": [], "errors": []}
 
@@ -27,7 +31,7 @@ async def research_chain(topic: str, model: str = None) -> dict:
     ], tracker, model=model)
 
     try:
-        subtopics = json.loads(step1.strip().strip("```json").strip("```"))
+        subtopics = json.loads(re.sub(r'^```[a-z]*\n|\n?```$', '', step1.strip()))
         results["steps"].append({"step": "plan", "subtopics": subtopics})
         print(f"✅ Subtopics identified:")
         for i, s in enumerate(subtopics, 1):
@@ -82,6 +86,7 @@ async def research_chain(topic: str, model: str = None) -> dict:
     return results
 
 async def main():
+    await ping()
     topic = "Impact of transformer architecture on NLP"
 
     print("=" * 60)

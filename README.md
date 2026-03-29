@@ -2,7 +2,11 @@
 
 # Prompt Engineering Patterns
 
-A hands-on collection of prompt-engineering patterns and advanced LLM techniques built with **Azure OpenAI** and **Ollama**. Each numbered script is a self-contained example that you can run, read, and adapt.
+A hands-on collection of prompt-engineering patterns and advanced LLM techniques that connects to **Azure OpenAI**, **OpenAI**, **Anthropic**, **Google Gemini**, or a locally running **Ollama** instance, with pluggable provider configuration, built-in token usage tracking, and a unified client interface. Each numbered script is a self-contained example that you can run, read, and adapt. It is designed as a teaching resource to demonstrate practical prompt-engineering patterns in Python.
+
+---
+
+> **Testing Note:** This codebase has only been tested with **Ollama** and **Azure OpenAI**. Support for OpenAI, Anthropic, and Google Gemini is implemented but has not been verified.
 
 ---
 
@@ -27,8 +31,8 @@ CodebaseExamples/
 ├── keys/
 │   └── .env                   # Your API credentials (not committed)
 └── examples/
+    ├── provider_config.py     # Unified provider registry, client factory & helpers
     ├── part_1/                # Foundational prompt patterns (1-6)
-    │   ├── shared_config.py   # Sync Azure OpenAI client & env loading
     │   ├── 1_prompt_anatomy.py
     │   ├── 2_few_shot_classifier.py
     │   ├── 3_cot_math_solver.py
@@ -36,7 +40,6 @@ CodebaseExamples/
     │   ├── 5_invoice_extractor.py
     │   └── 6_prompt_debugger.py
     └── part_2/                # Advanced & agentic patterns (7-17)
-        ├── shared_config.py   # Async Azure OpenAI client & TokenTracker
         ├── 7_react_agent.py
         ├── 8_self_consistency.py
         ├── 9_research_chain.py
@@ -52,7 +55,7 @@ CodebaseExamples/
 
 ### How It Works
 
-Each `shared_config.py` loads credentials from `keys/.env`, creates an OpenAI client, and exposes it to every script in its folder. Part 1 uses a **synchronous** client; Part 2 uses an **asynchronous** client with a built-in `TokenTracker` so you can monitor cost and usage.
+`examples/provider_config.py` is the single source of truth for all LLM provider management. It loads credentials from `keys/.env`, validates the selected provider (set via `LLM_PROVIDER` env var), and creates a client normalised to the OpenAI SDK interface — so every example script can call `client.chat.completions.create(...)` regardless of which provider is active. Part 1 uses a **synchronous** client; Part 2 uses an **asynchronous** client with a built-in `TokenTracker` so you can monitor cost and usage.
 
 ---
 
@@ -82,9 +85,10 @@ pip install -r requirements.txt
 
 The `requirements.txt` installs:
 
-- `openai` — Azure OpenAI SDK
-- `ollama` — Local model client
+- `openai` — OpenAI / Azure OpenAI SDK (also used as the unified interface for Ollama and Gemini)
+- `anthropic` — Anthropic SDK (wrapped by an adapter in `provider_config.py`)
 - `python-dotenv` — `.env` file loading
+- `instructor` — Structured extraction via Pydantic models
 
 ---
 
@@ -96,14 +100,32 @@ Inside the `keys/` directory, create a file named `.env`:
 keys/.env
 ```
 
-Add your credentials (replace each placeholder with the value you received):
+Add your credentials for the provider(s) you plan to use. Set `LLM_PROVIDER` to one of `azure`, `openai`, `anthropic`, `gemini`, or `ollama`:
 
 ```env
+LLM_PROVIDER=azure
+
+# Azure OpenAI
 AZURE_OPENAI_API_KEY=your_api_key_here
 AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com/
 AZURE_OPENAI_MODEL_NAME=gpt-4o
 AZURE_OPENAI_API_VERSION=2024-02-15-preview
-OLLAMA_MODEL_NAME=qwen2.5-coder:7b
+
+# OpenAI
+# OPENAI_API_KEY=your_key_here
+# OPENAI_MODEL_NAME=gpt-4o
+
+# Anthropic
+# ANTHROPIC_API_KEY=your_key_here
+# ANTHROPIC_MODEL_NAME=claude-sonnet-4-20250514
+
+# Google Gemini
+# GEMINI_API_KEY=your_key_here
+# GEMINI_MODEL_NAME=gemini-2.0-flash
+
+# Ollama (local)
+# OLLAMA_BASE_URL=http://localhost:11434/v1
+# OLLAMA_MODEL_NAME=qwen2.5-coder:7b
 ```
 
 Immediately add `.env` to your `.gitignore`:
@@ -283,15 +305,23 @@ Type a message and press Enter to chat. Type `/bye` to exit the session.
 
 ## Configuration Reference
 
-All configuration is handled through environment variables in `keys/.env`:
+All configuration is handled through environment variables in `keys/.env`. Set `LLM_PROVIDER` to choose your backend, then supply the matching credentials:
 
-| Variable | Required | Description |
+| Variable | Provider | Description |
 |----------|----------|-------------|
-| `AZURE_OPENAI_API_KEY` | Yes | Your Azure OpenAI API key |
-| `AZURE_OPENAI_ENDPOINT` | Yes | Azure resource endpoint URL |
-| `AZURE_OPENAI_MODEL_NAME` | Yes | Deployment / model name (e.g. `gpt-4o`) |
-| `AZURE_OPENAI_API_VERSION` | Yes | API version string (e.g. `2024-02-15-preview`) |
-| `OLLAMA_MODEL_NAME` | No | Local Ollama model name (default: `qwen2.5-coder:7b`) |
+| `LLM_PROVIDER` | All | `azure`, `openai`, `anthropic`, `gemini`, or `ollama` |
+| `AZURE_OPENAI_API_KEY` | Azure | Your Azure OpenAI API key |
+| `AZURE_OPENAI_ENDPOINT` | Azure | Azure resource endpoint URL |
+| `AZURE_OPENAI_MODEL_NAME` | Azure | Deployment / model name (e.g. `gpt-4o`) |
+| `AZURE_OPENAI_API_VERSION` | Azure | API version string (e.g. `2024-02-15-preview`) |
+| `OPENAI_API_KEY` | OpenAI | Your OpenAI API key |
+| `OPENAI_MODEL_NAME` | OpenAI | Model name (e.g. `gpt-4o`) |
+| `ANTHROPIC_API_KEY` | Anthropic | Your Anthropic API key |
+| `ANTHROPIC_MODEL_NAME` | Anthropic | Model name (e.g. `claude-sonnet-4-20250514`) |
+| `GEMINI_API_KEY` | Gemini | Your Google Gemini API key |
+| `GEMINI_MODEL_NAME` | Gemini | Model name (e.g. `gemini-2.0-flash`) |
+| `OLLAMA_BASE_URL` | Ollama | Ollama API URL (default: `http://localhost:11434/v1`) |
+| `OLLAMA_MODEL_NAME` | Ollama | Local model name (e.g. `qwen2.5-coder:7b`) |
 
 ---
 

@@ -3,7 +3,11 @@ Few-Shot Classifier: Sentiment analysis with configurable example count.
 Demonstrates the impact of 0-shot, 1-shot, 3-shot, and 5-shot.
 """
 
-from shared_config import azure_client, AZURE_MODEL
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_sync_client  # noqa: E402
+client, MODEL, _ = init_sync_client()
 
 # Bank of labeled examples for few-shot
 EXAMPLES = [
@@ -52,8 +56,8 @@ def build_prompt(n_examples: int, review: str) -> str:
 
 def classify(n_examples: int, review: str) -> str:
     prompt = build_prompt(n_examples, review)
-    response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    response = client.chat.completions.create(
+        model=MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_completion_tokens=500,
     )

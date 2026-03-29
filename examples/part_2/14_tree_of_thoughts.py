@@ -6,14 +6,17 @@ Generate multiple next-step approaches → evaluate which is most promising
 
 import asyncio
 import re
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def tree_of_thoughts(problem: str, breadth: int = 3, depth: int = 3,
                            model: str = None) -> dict:
     """Simplified ToT: generate → evaluate → select best → continue."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
 
     async def generate_thoughts(context: str, n: int) -> list[str]:
@@ -73,6 +76,7 @@ async def tree_of_thoughts(problem: str, breadth: int = 3, depth: int = 3,
 
 
 async def main():
+    await ping()
     problem = (
         "Design a system to detect and prevent credit card fraud in real-time "
         "for an e-commerce platform processing 10,000 transactions per minute."

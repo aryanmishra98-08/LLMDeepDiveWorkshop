@@ -3,9 +3,11 @@ Prompt Anatomy Demo: Same task, 5 different prompt structures.
 Compare how structure affects output quality.
 """
 
-import ollama
-
-from shared_config import azure_client, AZURE_MODEL, OLLAMA_MODEL
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_sync_client  # noqa: E402
+client, MODEL, _ = init_sync_client()
 
 TASK_TEXT = """
 Meeting Notes - Feb 10, 2026
@@ -19,29 +21,17 @@ Attendees: Sarah (PM), Jake (Eng), Maria (Design), Tom (QA)
   Tom re-tests checkout after fixes. Sarah updates stakeholders Friday.
 """
 
-def call_azure(prompt: str, system: str = "") -> str:
+def call_llm(prompt: str, system: str = "") -> str:
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": prompt})
-    response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    response = client.chat.completions.create(
+        model=MODEL,
         messages=messages,
         max_completion_tokens=500,
     )
     return response.choices[0].message.content
-
-def call_ollama(prompt: str, system: str = "") -> str:
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
-    response = ollama.chat(
-        model=OLLAMA_MODEL,
-        messages=messages,
-        options={"temperature": 0},
-    )
-    return response.message.content
 
 
 # --- Structure 1: No structure (vague) ---
@@ -118,16 +108,9 @@ print("=" * 70)
 
 for name, prompt in structures.items():
     print(f"\n{'─' * 60}")
-    print(f"📝 {name} — Azure OpenAI ({AZURE_MODEL})")
-    print(f"   Token estimate: ~{len(prompt.split()) * 1.3:.0f} tokens")
+    print(f"📝 {name} — model: {MODEL}")
+    print(f"   Input token estimate: ~{len(prompt.split()) * 1.3:.0f} tokens")
     print(f"{'─' * 60}")
-    result = call_azure(prompt)
+    result = call_llm(prompt)
     print(result)
     print()
-
-# Also show Ollama with the XML-structured prompt
-print(f"\n{'─' * 60}")
-print(f"📝 5b. Full 5-component (XML) — Ollama ({OLLAMA_MODEL})")
-print(f"{'─' * 60}")
-result = call_ollama(prompt_5)
-print(result)

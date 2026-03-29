@@ -6,13 +6,17 @@ solve each incrementally using prior solutions as context.
 
 import asyncio
 import json
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import re
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def least_to_most(problem: str, model: str = None) -> dict:
     """Decompose into sub-problems (simple→complex), solve incrementally."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
 
     # Step 1: Decompose
@@ -29,7 +33,19 @@ async def least_to_most(problem: str, model: str = None) -> dict:
 
     try:
         subproblems = json.loads(
-            decomposition.strip().strip("```json").strip("```"))
+            re.sub(r'^```[a-z]*\n|\n?```$', '', decomposition.strip()))
+        # Normalize: model may return list[dict] instead of list[str]
+        normalized = []
+        for s in subproblems:
+            if isinstance(s, str):
+                normalized.append(s)
+            elif isinstance(s, dict):
+                title = s.get("sub") or s.get("name") or s.get("title") or ""
+                desc = s.get("desc") or s.get("description") or ""
+                normalized.append(f"{title}: {desc}".strip(": ") if title or desc else str(s))
+            else:
+                normalized.append(str(s))
+        subproblems = normalized
         print(f"✅ Decomposed into {len(subproblems)} sub-problems:")
         for i, s in enumerate(subproblems, 1):
             print(f"   {i}. {s}")
@@ -66,6 +82,7 @@ async def least_to_most(problem: str, model: str = None) -> dict:
 
 
 async def main():
+    await ping()
     problem = (
         "Design a recommendation system for an e-commerce platform that "
         "handles 1 million users and 500,000 products, supports real-time "

@@ -4,8 +4,11 @@ Classify a message, then route to a specialized handler based on category.
 """
 
 import asyncio
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 HANDLERS = {
@@ -19,7 +22,7 @@ HANDLERS = {
 
 async def branching_chain(message: str, model: str = None) -> dict:
     """Classify a customer message, then route to specialized handler."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
 
     # Step 1: Classify
@@ -57,6 +60,7 @@ async def branching_chain(message: str, model: str = None) -> dict:
     }
 
 async def main():
+    await ping()
     message = "I was charged twice for my subscription last month and I want a refund."
 
     print("=" * 60)

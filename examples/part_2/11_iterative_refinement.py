@@ -4,14 +4,17 @@ Draft → critique → revise loop with quality score-based early stopping.
 """
 
 import asyncio
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def iterative_refine(task: str, max_iterations: int = 3,
                            model: str = None) -> dict:
     """Draft → Critique → Revise loop with quality-based termination."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     history = []
 
@@ -65,6 +68,7 @@ async def iterative_refine(task: str, max_iterations: int = 3,
             "history": history, "usage": tracker.report()}
 
 async def main():
+    await ping()
     task = (
         "Write a 100-word product description for a noise-cancelling "
         "headphone aimed at remote workers. Emphasize comfort and battery life."

@@ -3,7 +3,11 @@ Chain-of-Thought Math Solver: Compare direct answer vs CoT approaches.
 Shows the dramatic difference in accuracy for multi-step problems.
 """
 
-from shared_config import azure_client, AZURE_MODEL
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_sync_client  # noqa: E402
+client, MODEL, _ = init_sync_client()
 
 PROBLEMS = [
     "A store had 52 apples. They sold 18 in the morning and 12 in the afternoon, "
@@ -21,8 +25,8 @@ EXPECTED = ["52", "210", "60"]
 
 def solve_direct(problem: str) -> dict:
     """Zero-shot: just ask for the answer."""
-    response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    response = client.chat.completions.create(
+        model=MODEL,
         messages=[{
             "role": "user",
             "content": f"{problem}\n\nProvide ONLY the numerical answer."
@@ -37,8 +41,8 @@ def solve_direct(problem: str) -> dict:
 
 def solve_zero_shot_cot(problem: str) -> dict:
     """Zero-shot CoT: 'Let's think step by step'."""
-    response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    response = client.chat.completions.create(
+        model=MODEL,
         messages=[{
             "role": "user",
             "content": f"{problem}\n\nLet's think step by step."
@@ -69,8 +73,8 @@ Answer: 53
 
 Problem: """ + problem + """
 """
-    response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    response = client.chat.completions.create(
+        model=MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_completion_tokens=300,
     )

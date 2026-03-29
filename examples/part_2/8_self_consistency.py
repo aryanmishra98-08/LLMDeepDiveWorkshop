@@ -6,14 +6,18 @@ Parallel sampling across N reasoning paths with majority vote aggregation.
 import asyncio
 import re
 from collections import Counter
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+from typing import Optional
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def self_consistent_solve(question: str, n_paths: int = 5,
                                  model: str = None) -> dict:
     """Solve a math/logic problem using self-consistency (N paths + vote)."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     system = (
         "Solve this math problem step by step. "
@@ -24,7 +28,7 @@ async def self_consistent_solve(question: str, n_paths: int = 5,
 
     path_num = 0
 
-    async def single_path() -> str | None:
+    async def single_path() -> Optional[str]:
         nonlocal path_num
         path_num += 1
         current = path_num
@@ -39,9 +43,9 @@ async def self_consistent_solve(question: str, n_paths: int = 5,
         for line in result.strip().split("\n"):
             print(f"      {line}")
 
-        # Extract both parts of the answer
-        time_m = re.search(r"Meeting time:\s*(\d+:\d+\s*[AP]M)", result, re.IGNORECASE)
-        dist_m = re.search(r"Distance from City A:\s*(\d+\.?\d*)\s*km", result, re.IGNORECASE)
+        # Extract both parts of the answer (tolerate markdown bold / extra punctuation)
+        time_m = re.search(r"Meeting time:\s*\**\s*(\d+:\d+\s*[AP]M)\s*\**", result, re.IGNORECASE)
+        dist_m = re.search(r"Distance from City A:\s*\**\s*(\d+\.?\d*)\s*km\s*\**", result, re.IGNORECASE)
         if time_m and dist_m:
             answer = f"{time_m.group(1).strip()} | {dist_m.group(1).strip()} km from City A"
             print(f"   ✅ Path {current} extracted answer: {answer}")
@@ -89,6 +93,7 @@ async def self_consistent_solve(question: str, n_paths: int = 5,
     }
 
 async def main():
+    await ping()
     question = (
         "A train leaves City A at 6:00 AM travelling at 90 km/h toward City B. "
         "A second train leaves City B at 7:30 AM travelling toward City A at 120 km/h. "

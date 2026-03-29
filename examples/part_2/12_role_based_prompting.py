@@ -5,8 +5,11 @@ audience-adaptive explainer, and multi-persona debate.
 """
 
 import asyncio
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 # Pattern 1: Expert consultant (domain behavior shaping)
@@ -24,7 +27,7 @@ SECURITY_REVIEWER = {
 # Pattern 2: Audience-adaptive explainer
 async def explain_for_audience(concept: str, audience: str,
                                 model: str = None) -> str:
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     print(f"\n{'─' * 50}")
     print(f"⟳  Generating explanation for audience: {audience!r}...")
@@ -42,7 +45,7 @@ async def explain_for_audience(concept: str, audience: str,
 async def multi_persona_debate(question: str,
                                 model: str = None) -> dict:
     """Three personas argue different angles, then a synthesizer concludes."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     personas = [
         ("Optimist", "You argue FOR the proposal. Find every benefit and upside. "
@@ -91,6 +94,7 @@ async def multi_persona_debate(question: str,
 
 
 async def main():
+    await ping()
     concept = "transformer architecture"
     audiences = ["5-year-old child", "college CS student", "CTO"]
 

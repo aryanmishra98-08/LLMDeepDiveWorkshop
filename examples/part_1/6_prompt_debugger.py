@@ -5,8 +5,11 @@ Implements ablation testing by systematically removing components.
 
 import json
 from dataclasses import dataclass
-
-from shared_config import azure_client, AZURE_MODEL
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_sync_client  # noqa: E402
+client, MODEL, _ = init_sync_client()
 
 
 @dataclass
@@ -27,8 +30,8 @@ def ablation_test(
 
     # Test 1: Full prompt (all components)
     full_prompt = "\n\n".join(c.content for c in components) + f"\n\n{test_input}"
-    full_response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    full_response = client.chat.completions.create(
+        model=MODEL,
         messages=[{"role": "user", "content": full_prompt}],
         max_completion_tokens=500,
     )
@@ -42,8 +45,8 @@ def ablation_test(
         remaining = [c for j, c in enumerate(components) if j != i]
         partial_prompt = "\n\n".join(c.content for c in remaining) + f"\n\n{test_input}"
 
-        response = azure_client.chat.completions.create(
-            model=AZURE_MODEL,
+        response = client.chat.completions.create(
+            model=MODEL,
             messages=[{"role": "user", "content": partial_prompt}],
             max_completion_tokens=500,
         )
@@ -53,8 +56,8 @@ def ablation_test(
         }
 
     # Test 3: Minimal prompt (just the input, no components)
-    minimal_response = azure_client.chat.completions.create(
-        model=AZURE_MODEL,
+    minimal_response = client.chat.completions.create(
+        model=MODEL,
         messages=[{"role": "user", "content": test_input}],
         max_completion_tokens=500,
     )

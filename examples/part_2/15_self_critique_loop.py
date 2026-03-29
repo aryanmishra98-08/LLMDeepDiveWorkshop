@@ -4,14 +4,17 @@ Generate → critique → reflect on failure → regenerate with verbal reflecti
 """
 
 import asyncio
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def self_critique_loop(task: str, max_attempts: int = 3,
                              model: str = None) -> dict:
     """Generate → Critique → Regenerate with verbal reflection memory."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     reflections = []
 
@@ -50,7 +53,9 @@ async def self_critique_loop(task: str, max_attempts: int = 3,
             {"role": "user", "content": f"Task: {task}\n\nOutput:\n{output}"}
         ], tracker, model=model, max_tokens=300)
 
-        passed = critique.strip().upper().startswith("PASS")
+        # Strip markdown bold markers (e.g. **PASS**) before checking
+        cleaned = critique.strip().strip("*").strip().upper()
+        passed = cleaned.startswith("PASS")
         verdict = "✅ PASS" if passed else "❌ FAIL"
         first_line = critique.split("\n")[0][:80]
         print(f"{verdict} — Critique: \"{first_line}\"")
@@ -79,6 +84,7 @@ async def self_critique_loop(task: str, max_attempts: int = 3,
 
 
 async def main():
+    await ping()
     task = (
         "Write a professional email to a client explaining a 2-week project delay "
         "due to unexpected technical challenges. Be honest but reassuring."

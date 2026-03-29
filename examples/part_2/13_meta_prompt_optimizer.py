@@ -4,16 +4,20 @@ Iteratively improve a prompt over N rounds using failure examples as context.
 """
 
 import asyncio
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+from typing import Optional
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def optimize_prompt(original_prompt: str, task_description: str,
-                          example_failures: list[str] | None = None,
+                          example_failures: Optional[list[str]] = None,
                           rounds: int = 3,
                           model: str = None) -> dict:
     """Use an LLM to iteratively improve a prompt through N rounds."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     history = [{"round": 0, "prompt": original_prompt}]
     current = original_prompt
@@ -61,6 +65,7 @@ async def optimize_prompt(original_prompt: str, task_description: str,
             "rounds": rounds, "history": history, "usage": tracker.report()}
 
 async def main():
+    await ping()
     original = "Summarize the text."
     task_desc = ("Summarize technical documents into 2-3 bullet points "
                  "for executive stakeholders who need actionable insights.")

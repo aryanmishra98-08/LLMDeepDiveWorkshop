@@ -7,8 +7,11 @@ import re
 import math
 import asyncio
 from dataclasses import dataclass
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 # ── Tool definitions ──────────────────────────────────────────────────
 TOOLS = {
@@ -60,7 +63,7 @@ def parse_action(text: str) -> tuple[str, str]:
 async def react_agent(question: str, max_steps: int = 7,
                       model: str = None) -> dict:
     """Run a ReAct loop: Thought → Action → Observation → ... → finish."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
     system = REACT_SYSTEM.format(tool_block=build_tool_block())
     messages = [
@@ -125,6 +128,7 @@ async def react_agent(question: str, max_steps: int = 7,
 
 # Run it
 async def main():
+    await ping()
     question = "What is the per-capita GDP of France? Use the population and GDP tools."
 
     print("=" * 60)

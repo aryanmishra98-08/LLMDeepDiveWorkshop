@@ -8,11 +8,28 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import date
 from enum import Enum
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_sync_client  # noqa: E402
+llm_client, MODEL, PROVIDER = init_sync_client()
 
-from shared_config import azure_client, AZURE_MODEL
-
-# Wrap Azure client with Instructor for structured output + retry
-client = instructor.from_openai(azure_client)
+# Map each provider to the best instructor extraction mode.
+# provider_config normalizes all providers to an OpenAI-compatible interface,
+# so instructor.from_openai works universally. The mode controls how the
+# model returns structured data:
+#   TOOLS — native function/tool calling (OpenAI, Azure): most reliable
+#   JSON  — plain JSON in the message body (Ollama, Gemini, Anthropic adapter):
+#            required for providers that don't support function calling
+_INSTRUCTOR_MODES: dict[str, instructor.Mode] = {
+    "openai":     instructor.Mode.TOOLS,
+    "azure":      instructor.Mode.TOOLS,
+    "anthropic":  instructor.Mode.JSON,
+    "gemini":     instructor.Mode.JSON,
+    "ollama":     instructor.Mode.MD_JSON,
+}
+_mode = _INSTRUCTOR_MODES.get(PROVIDER, instructor.Mode.JSON)
+instructor_client = instructor.from_openai(llm_client, mode=_mode)
 
 
 # --- Define the extraction schema ---
@@ -82,10 +99,18 @@ Wire to: Acme Cloud Services LLC, routing 021000021, acct 1234567890
 """
 
 # Extract with automatic retry on validation failure
-invoice = client.chat.completions.create(
-    model=AZURE_MODEL,
+invoice = instructor_client.chat.completions.create(
+    model=MODEL,
     response_model=Invoice,
     messages=[
+        {
+            "role": "system",
+            "content": (
+                "You are a precise data extraction assistant. "
+                "Output only valid JSON — no inline comments, no annotations, no explanatory text inside the JSON. "
+                "Always use ISO 8601 date format with zero-padded month and day (YYYY-MM-DD), e.g. 2026-02-03."
+            ),
+        },
         {
             "role": "user",
             "content": (
@@ -93,7 +118,7 @@ invoice = client.chat.completions.create(
                 "Calculate quantities and unit prices for annual items.\n\n"
                 f"{INVOICE_TEXT}"
             ),
-        }
+        },
     ],
     max_retries=3,  # Retry up to 3 times if validation fails
 )

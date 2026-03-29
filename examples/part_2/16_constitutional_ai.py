@@ -4,14 +4,17 @@ Generate → check output against a set of principles → revise to comply with 
 """
 
 import asyncio
-
-from shared_config import AZURE_MODEL, TokenTracker, chat
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from provider_config import init_async_client, TokenTracker, chat, ping  # noqa: E402
+_, MODEL, _ = init_async_client()
 
 
 async def constitutional_generate(task: str, principles: list[str],
                                    model: str = None) -> dict:
     """Generate → check against constitution → revise."""
-    model = model or AZURE_MODEL
+    model = model or MODEL
     tracker = TokenTracker()
 
     # Generate initial response
@@ -66,6 +69,7 @@ async def constitutional_generate(task: str, principles: list[str],
 
 # Usage: politically neutral news summarizer
 async def main():
+    await ping()
     task = "Summarize the debate around AI regulation in the US."
     principles = [
         "Present all political perspectives fairly without favoring any side",
