@@ -2,7 +2,7 @@
 
 # LLM Wrapper: Command-Line Chatbot with Azure OpenAI, OpenAI, Anthropic, Gemini & Ollama
 
-A command-line chatbot application that connects to **Azure OpenAI** or **OpenAI** APIs with multi-user session management, pluggable conversation memory strategies, and built-in token usage tracking. It is designed as a teaching example to demonstrate how to structure an AI chat app in Python.
+A command-line chatbot application that connects to **Azure OpenAI**, **OpenAI**, **Anthropic**, **Google Gemini**, or a locally running **Ollama** instance, with multi-user session management, pluggable conversation memory strategies, and built-in token usage tracking. It is designed as a teaching example to demonstrate how to structure an AI chat app in Python.
 
 ---
 

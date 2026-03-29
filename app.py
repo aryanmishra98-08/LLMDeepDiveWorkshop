@@ -5,7 +5,7 @@ This is the main file you run:   python app.py
 
 Flow:
   1. Enter a username.
-  2. Pick an AI provider  (e.g. Azure OpenAI).
+  2. Pick an AI provider  (Azure OpenAI, OpenAI, Anthropic, Google Gemini, or Ollama).
   3. Pick a memory strategy  (simple / fixed window / summarizing).
   4. User menu  --  session controls for that user:
        new session, resume, session count, per-session tokens,

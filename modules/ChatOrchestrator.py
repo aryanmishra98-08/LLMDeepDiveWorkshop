@@ -54,7 +54,7 @@ class ChatOrchestrator:
     The central controller that the rest of the app uses.
 
     It holds:
-      - An AI manager        (talks to Azure OpenAI)
+      - An AI manager        (talks to the configured AI provider)
       - A conversation manager (stores chat history)
       - A token tracker      (counts how many tokens are used)
       - A user-sessions map  (which user owns which sessions)

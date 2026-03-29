@@ -3,7 +3,7 @@ modules  --  Core building blocks for the chat application.
 
 This package contains the following modules:
 
-  AIManagers.py          - Clients for Azure OpenAI and OpenAI APIs.
+  AIManagers.py          - Clients for Azure OpenAI, OpenAI, Anthropic, Google Gemini, and Ollama.
   ChatOrchestrator.py    - Central controller that wires AI, memory, and
                            token tracking together.
   ConversationManagers.py - Three strategies for managing chat history
