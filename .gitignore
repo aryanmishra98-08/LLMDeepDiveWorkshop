@@ -220,6 +220,8 @@ lerna-debug.log*
 
 # Secrets
 *.pem
+keys/.env
+keys/*.local
 
 # Dependencies
 node_modules/
