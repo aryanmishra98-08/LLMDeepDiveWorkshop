@@ -114,7 +114,7 @@ def build_llm() -> tuple[Any, str]:
 
     if PROVIDER == "ollama":
         from langchain_openai import ChatOpenAI  # Ollama exposes an OpenAI-compatible API
-        model    = os.getenv("OLLAMA_MODEL_NAME", "llama3")
+        model    = os.getenv("OLLAMA_MODEL_NAME", "qwen3:8b")
         base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
         log.info("Provider: Ollama")
         return ChatOpenAI(
