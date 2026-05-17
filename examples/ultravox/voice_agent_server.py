@@ -71,19 +71,27 @@ Your job is to:
 
 Keep your responses concise — 2 to 3 sentences maximum. Be human. Don't sound scripted. If you don't know something specific about BrightStart's offerings, say so honestly and offer to find out or connect them with the right person.
 
-Do not make up pricing, session counts, or specific coach names. When in doubt, offer the intro call."""
+Do not make up pricing, session counts, or specific coach names. When in doubt, offer the intro call.
+
+When the conversation naturally concludes — the caller says goodbye, thanks you, or indicates they're done — use the hangUp tool to end the call politely."""
 
 AGENT_CONFIG = {
     "systemPrompt":        SYSTEM_PROMPT,
     "model":               ULTRAVOX_MODEL,
     "voice":               "Jessica",  # Ultravox voice ID — see ultravox.ai/docs for alternatives
     "temperature":         0.4,         # Low-ish temperature keeps answers consistent but not robotic
+    "selectedTools": [
+        {
+            "toolName": "hangUp",
+        }
+    ],
     "firstSpeakerSettings": {
         "agent": {
             # uninterruptible=True prevents the user cutting off Nova's opening line,
             # giving the greeting a chance to land cleanly before the conversation begins.
             "uninterruptible": True,
             "text": "Hi, this is Nova from BrightStart Coaching. How can I help you today?",
+            "delay": "2s"
         }
     },
     "initialOutputMedium": "MESSAGE_MEDIUM_VOICE",
